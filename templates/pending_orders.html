@@ -1,0 +1,174 @@
+{% extends 'index.html' %}
+
+{% block body %}
+<div class="container">
+    <h2>Process Orders</h2>
+    
+    <table id="orderTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Fish</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>
+                    <input type="text" name="label" value="{{ order.label }}" class="form-control label-input" 
+                           data-order-id="{{ order.id }}" pattern="[0-9]*" inputmode="numeric">
+                </td>
+                <td>{{ order.id }}</td>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.fish.name }}</td>
+                <td>{{ order.quantity }}kg</td>
+                <td>{{ order.total_price }}</td>
+                <td>{{ order.user.phone }}</td>
+                <td>{{ order.address.street_address }}, {{ order.address.city }}</td>
+                <td>
+                    <form method="POST" class="status-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <input type="hidden" name="action" value="status">
+                        <select name="status" class="form-control">
+                            <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                            <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary btn-sm mt-1">Update Status</button>
+                    </form>
+                </td>
+                <td>
+                    <button class="btn btn-success btn-sm label-update-btn" data-order-id="{{ order.id }}">Update Label</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10">No orders found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <button id="updateAllLabels" class="btn btn-success mt-3">Update All Labels</button>
+</div>
+
+{% csrf_token %}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Setup CSRF token for all AJAX requests
+    $.ajaxSetup({
+        headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+        }
+    });
+
+    // Initialize DataTable
+    var table = $('#orderTable').DataTable({
+        pageLength: 10,
+        ordering: true,
+        responsive: true,
+        columnDefs: [{
+            targets: 0,
+            type: 'num',
+            render: function(data, type, row) {
+                if (type === 'sort') {
+                    return parseInt($(data).val()) || 0;
+                }
+                return data;
+            }
+        }],
+        order: [[0, 'asc']]
+    });
+
+    // Individual label update
+    $('.label-update-btn').on('click', function() {
+        const orderId = $(this).data('order-id');
+        const labelValue = $(this).closest('tr').find('.label-input').val();
+        
+        $.ajax({
+            url: '/update-label/',
+            method: 'POST',
+            data: {
+                order_id: orderId,
+                label: labelValue
+            },
+            success: function(response) {
+                if(response.status === 'success') {
+                    alert('Label updated successfully');
+                    location.reload();
+                } else {
+                    alert('Error updating label');
+                }
+            },
+            error: function() {
+                alert('Error updating label');
+            }
+        });
+    });
+
+    // Update all labels
+    $('#updateAllLabels').on('click', function() {
+        const updates = [];
+        $('.label-input').each(function() {
+            updates.push({
+                orderId: $(this).data('order-id'),
+                label: $(this).val()
+            });
+        });
+        
+        $.ajax({
+            url: '/update-labels/',
+            method: 'POST',
+            data: {
+                labels: JSON.stringify(updates)
+            },
+            success: function(response) {
+                if(response.status === 'success') {
+                    alert('All labels updated successfully');
+                    location.reload();
+                } else {
+                    alert('Error updating labels');
+                }
+            },
+            error: function() {
+                alert('Error updating labels');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.container {
+    padding: 20px;
+}
+.table {
+    width: 100%;
+    margin-top: 20px;
+}
+.form-control {
+    min-width: 50px;
+}
+.status-form {
+    display: flex;
+    flex-direction: column;
+}
+</style>
+{% endblock %}

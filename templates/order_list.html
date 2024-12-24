@@ -1,0 +1,185 @@
+{% extends 'index.html' %}
+{% block body %}
+
+{% load static %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<div class="container mt-5">
+    <h2 class="mb-4">Order List</h2>
+    <table class="table table-striped table-hover" id="orderTable">
+        <thead class="table-light">
+            <tr>
+                <th>NO</th>
+                <th>Order ID</th>
+                <th>Customer Name</th>
+                <th>Fish</th>
+                <th>Quantity (kg)</th>
+                <th>Total Price</th>
+                <th>Status</th>
+                <th>Order Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ order.id }}</td>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.fish.name }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>₹{{ order.total_price }}</td>
+                <td>
+                    <span id="status-{{ order.id }}" class="badge 
+                        {% if order.status == 'pending' %}bg-warning{% endif %}
+                        {% if order.status == 'processing' %}bg-primary{% endif %}
+                        {% if order.status == 'delivered' %}bg-success{% endif %}
+                        {% if order.status == 'cancelled' %}bg-danger{% endif %}
+                    ">
+                        {{ order.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ order.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            Update Status
+                        </button>
+                        <ul class="dropdown-menu">
+                            
+                            {% if order.status != 'delivered' %}
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'delivered')">Delivered</a></li>
+                            {% endif %}
+                            {% if order.status != 'cancelled' %}
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'cancelled')">Cancelled</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center">No orders have been placed yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Toast notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="statusToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Status Update</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+<!-- Make sure to include all necessary JavaScript files -->
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+    // Initialize DataTable
+    $(document).ready(function() {
+        $('#orderTable').DataTable({
+            language: {
+                search: "Search Orders:",
+                zeroRecords: "No matching orders found.",
+                info: "Showing _START_ to _END_ of _TOTAL_ orders",
+                infoEmpty: "Showing 0 to 0 of 0 orders",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            }
+        });
+
+        // Initialize all dropdowns
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+        var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl)
+        });
+    });
+
+    // Function to update order status
+    function updateStatus(orderId, newStatus) {
+        fetch(`/api/admin/orders/${orderId}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                status: newStatus
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Update the status badge
+            const statusBadge = document.getElementById(`status-${orderId}`);
+            statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+            
+            // Update badge color
+            statusBadge.className = 'badge';
+            switch(newStatus) {
+                case 'pending':
+                    statusBadge.classList.add('bg-warning');
+                    break;
+                case 'processing':
+                    statusBadge.classList.add('bg-primary');
+                    break;
+                case 'delivered':
+                    statusBadge.classList.add('bg-success');
+                    break;
+                case 'cancelled':
+                    statusBadge.classList.add('bg-danger');
+                    break;
+            }
+
+            // Show success toast
+            const toast = new bootstrap.Toast(document.getElementById('statusToast'));
+            document.getElementById('toastMessage').textContent = `Order status updated to ${newStatus}`;
+            toast.show();
+
+            // Refresh the page after a short delay
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const toast = new bootstrap.Toast(document.getElementById('statusToast'));
+            document.getElementById('toastMessage').textContent = 'Error updating status';
+            toast.show();
+        });
+    }
+
+    // Function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

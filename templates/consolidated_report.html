@@ -1,0 +1,326 @@
+{% extends 'index.html' %}
+
+{% block body %}
+<div class="container-fluid">
+    <h2 class="mb-4">Sales Reports</h2>
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly" type="button" role="tab" >
+                Monthly Sales
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab">
+                Product Sales
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="customer-tab" data-bs-toggle="tab" data-bs-target="#customer" type="button" role="tab">
+                Customer Sales
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="location-tab" data-bs-toggle="tab" data-bs-target="#location" type="button" role="tab">
+                Location Sales
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab content -->
+    <div class="tab-content" id="reportTabContent">
+        <!-- Monthly Sales Tab -->
+        <div class="tab-pane fade show active" id="monthly" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Monthly Sales Report</h4>
+                </div>
+                <div class="card-body">
+                    <table id="monthlySalesTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Total Orders</th>
+                                <th>Total Quantity (kg)</th>
+                                <th>Total Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in monthly_sales %}
+                            <tr>
+                                <td>{{ sale.month|date:"F Y" }}</td>
+                                <td>{{ sale.total_sales }}</td>
+                                <td>{{ sale.total_quantity|floatformat:2 }}</td>
+                                <td>₹{{ sale.total_revenue|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Sales Tab -->
+        <div class="tab-pane fade" id="product" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Product Sales Report</h4>
+                </div>
+                <div class="card-body">
+                    <table id="productSalesTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Price per kg</th>
+                                <th>Total Orders</th>
+                                <th>Total Quantity (kg)</th>
+                                <th>Total Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in product_sales %}
+                            <tr>
+                                <td>{{ product.fish__name }}</td>
+                                <td>₹{{ product.fish__price_per_kg }}</td>
+                                <td>{{ product.total_orders }}</td>
+                                <td>{{ product.total_quantity|floatformat:2 }}</td>
+                                <td>₹{{ product.total_revenue|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Sales Tab -->
+        <div class="tab-pane fade" id="customer" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Customer Sales Report</h4>
+                </div>
+                <div class="card-body">
+                    <table id="customerSalesTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Customer Name</th>
+                                <th>Phone</th>
+                                <th>Total Orders</th>
+                                <th>Total Spent</th>
+                                <th>Average Order Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in customer_sales %}
+                            <tr>
+                                <td>{{ customer.user__full_name }}</td>
+                                <td>{{ customer.user__phone }}</td>
+                                <td>{{ customer.total_orders }}</td>
+                                <td>₹{{ customer.total_spent|floatformat:2 }}</td>
+                                <td>₹{{ customer.avg_order_value|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Sales Tab -->
+        <div class="tab-pane fade" id="location" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Location Sales Report</h4>
+                </div>
+                <div class="card-body">
+                    <table id="locationSalesTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>City</th>
+                                <th>Total Orders</th>
+                                <th>Total Revenue</th>
+                                <th>Average Order Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for location in location_sales %}
+                            <tr>
+                                <td>{{ location.address__city }}</td>
+                                <td>{{ location.total_orders }}</td>
+                                <td>₹{{ location.total_revenue|floatformat:2 }}</td>
+                                <td>₹{{ location.avg_order_value|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DataTables CSS and JS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Common DataTable configuration
+        const tableConfig = {
+            pageLength: 10,
+            dom: '<"dt-buttons"B><"clear">lfrtip',
+            buttons: [
+                {
+                    extend: 'copy',
+                    className: 'btn btn-primary btn-sm',
+                    text: '<i class="fas fa-copy"></i> Copy'
+                },
+                {
+                    extend: 'csv',
+                    className: 'btn btn-success btn-sm',
+                    text: '<i class="fas fa-file-csv"></i> CSV'
+                },
+                {
+                    extend: 'excel',
+                    className: 'btn btn-info btn-sm',
+                    text: '<i class="fas fa-file-excel"></i> Excel'
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn btn-danger btn-sm',
+                    text: '<i class="fas fa-file-pdf"></i> PDF',
+                    orientation: 'landscape'
+                },
+                {
+                    extend: 'print',
+                    className: 'btn btn-dark btn-sm',
+                    text: '<i class="fas fa-print"></i> Print'
+                }
+            ]
+        };
+    
+        // Initialize all tables immediately
+        $('#monthlySalesTable').DataTable({
+            ...tableConfig,
+            order: [[0, 'desc']]
+        });
+    
+        $('#productSalesTable').DataTable({
+            ...tableConfig,
+            order: [[4, 'desc']]
+        });
+    
+        $('#customerSalesTable').DataTable({
+            ...tableConfig,
+            order: [[3, 'desc']]
+        });
+    
+        $('#locationSalesTable').DataTable({
+            ...tableConfig,
+            order: [[2, 'desc']]
+        });
+    
+        // Fix table width when switching tabs
+        $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+            $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+        });
+    });
+    </script>
+    
+    <style>
+    /* Custom styles for DataTables and buttons */
+    .dt-buttons {
+        margin-bottom: 15px;
+    }
+    
+    .dt-buttons .btn {
+        margin-right: 5px;
+    }
+    
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    
+    .tab-content {
+        padding-top: 20px;
+    }
+    
+    .card {
+        margin-bottom: 20px;
+    }
+    
+    .nav-tabs .nav-link {
+    color: #000000;  /* This makes the text black */
+    background-color: #94acc5;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #000000;  /* This keeps the text black when hovering */
+}
+
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+    color: #000000;  /* This ensures active tab is also black */
+    border-bottom: 2px solid #000000;  /* Optional: adds a black underline for active tab */
+    background-color: rgb(38, 92, 138);
+}
+    
+    /* Spacing between buttons and table */
+    div.dataTables_wrapper div.dataTables_filter {
+        margin-top: 10px;
+    }
+    
+    /* Make tables responsive */
+    .table-responsive {
+        width: 100%;
+        margin-bottom: 15px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Custom colors for specific buttons */
+    .dt-buttons .buttons-copy {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    
+    .dt-buttons .buttons-csv {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    
+    .dt-buttons .buttons-excel {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+    }
+    
+    .dt-buttons .buttons-pdf {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .dt-buttons .buttons-print {
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+    
+    /* Hover effects for buttons */
+    .dt-buttons .btn:hover {
+        opacity: 0.85;
+    }
+    </style>
+{% endblock %}
