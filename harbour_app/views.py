@@ -816,3 +816,118 @@ def sales_report(request):
     }
 
     return render(request, 'consolidated_report.html', context)
+
+
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Notification
+from .serializers import NotificationSerializer
+
+@api_view(['GET'])
+def get_notifications(request):
+    """Get all active notifications"""
+    try:
+        notifications = Notification.objects.filter(is_active=True).order_by('-created_at')
+        serializer = NotificationSerializer(notifications, many=True)
+        return Response({
+            'success': True,
+            'notifications': serializer.data
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@api_view(['POST'])
+def create_notification(request):
+    """Create a new notification"""
+    try:
+        serializer = NotificationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'success': True,
+                'message': 'Notification created successfully',
+                'notification': serializer.data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+            'success': False,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+# views.py
+from django.shortcuts import render
+from django.http import JsonResponse
+from .models import Notification
+
+def notification_list(request):
+    notifications = Notification.objects.all().order_by('-created_at')
+    return render(request, 'notification_list.html', {'notifications': notifications})
+
+
+
+# views.py
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from .forms import NotificationForm
+
+def create_notification(request):
+    if request.method == 'POST':
+        form = NotificationForm(request.POST)
+        print("Form data:", request.POST)  # Debug print
+        
+        if form.is_valid():
+            print("Form is valid")  # Debug print
+            try:
+                form.save()
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Notification created successfully'
+                })
+            except Exception as e:
+                print("Error saving form:", str(e))  # Debug print
+                return JsonResponse({
+                    'success': False,
+                    'message': str(e)
+                })
+        else:
+            print("Form errors:", form.errors)  # Debug print
+            return JsonResponse({
+                'success': False,
+                'message': str(form.errors)
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    })
+    
+    
+def delete_notification(request, pk):
+    try:
+        notification = get_object_or_404(Notification, pk=pk)
+        notification.delete()
+        return JsonResponse({'success': True, 'message': 'Notification deleted successfully'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+def edit_notification(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+    
+    if request.method == 'POST':
+        form = NotificationForm(request.POST, instance=notification)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True, 'message': 'Notification updated successfully'})
+        return JsonResponse({'success': False, 'message': str(form.errors)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})

@@ -37,4 +37,12 @@ path('api/orders/<int:order_id>/action/', views.OrderActionView.as_view(), name=
 path('update-labels/', views.update_labels, name='update_labels'),
 
 path('reports/consolidated/', views.sales_report, name='consolidated_report'),
+
+path('notifications/', views.get_notifications, name='get-notifications'),
+    path('notifications/create/', views.create_notification, name='create-notification'),
+    path('notifications-list/', views.notification_list, name='list-notification'),
+    path('notifications-create/', views.create_notification, name='notification_create'),
+    # urls.py
+path('notifications-delete/<int:pk>/', views.delete_notification, name='delete_notification'),
+path('notifications-edit/<int:pk>/', views.edit_notification, name='edit_notification'),
 ]

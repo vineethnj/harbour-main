@@ -1,7 +1,7 @@
+
 from django.db import models
-from django.db.models.functions import Cast
-from django.db.models import DecimalField
-from django.db.models import Sum
+
+
 
 class Fish(models.Model):
     
@@ -126,3 +126,16 @@ class Address(models.Model):
         
     def __str__(self):
         return f"{self.customer} "
+    
+    
+    
+    
+    
+class Notification(models.Model):
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

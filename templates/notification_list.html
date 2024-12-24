@@ -1,0 +1,226 @@
+<!-- templates/notifications/notification_list.html -->
+{% extends 'index.html' %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <div class=" d-flex justify-content-between align-items-center">
+        <h2>Notifications</h2>
+        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createNotificationModal">
+            Create New Notification
+        </button>
+    </div>
+        {% if notifications %}
+        <div class="row">
+            {% for notification in notifications %}
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ notification.title }}</h5>
+                            <p class="card-text">{{ notification.message }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">Created: {{ notification.created_at|date:"F d, Y H:i" }}</small>
+                                <div class="action-icons">
+                                    <a href="#" onclick="openEditModal('{{ notification.pk }}', '{{ notification.title }}', '{{ notification.message }}', {{ notification.is_active|yesno:'true,false' }})" class="text-decoration-none me-2">
+                                        <i class="fas fa-edit text-warning"></i>
+                                    </a>
+                                    <a href="#" onclick="deleteNotification('{{ notification.pk }}')" class="text-decoration-none">
+                                        <i class="fas fa-trash-alt text-danger"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <div class="alert alert-info">
+                No notifications available.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Notification Modal -->
+<div class="modal fade" id="createNotificationModal" tabindex="-1" aria-labelledby="createNotificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="notificationForm">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createNotificationModalLabel">Create New Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
+                        <label class="form-check-label" for="is_active">Active</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create Notification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="editNotificationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editNotificationForm">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit_notification_id">
+                    <div class="mb-3">
+                        <label for="edit_title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="edit_title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_message" class="form-label">Message</label>
+                        <textarea class="form-control" id="edit_message" name="message" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="edit_is_active" name="is_active">
+                        <label class="form-check-label" for="edit_is_active">Active</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('notificationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    fetch("/notifications-create/", {
+        method: 'POST',
+        body: new FormData(this),
+        credentials: 'same-origin',
+    })
+    .then(response => {
+        console.log('Raw Response:', response); // Print raw response
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response Data:', data); // Print parsed data
+        
+        if (data.success) {
+            // Show success message
+            alert('Notification created successfully');
+            
+            // Close modal
+            let modal = bootstrap.Modal.getInstance(document.getElementById('createNotificationModal'));
+            modal.hide();
+            
+            // Refresh the page to show new notification
+            location.reload();
+        } else {
+            alert(data.message || 'Error creating notification');
+        }
+    })
+    .catch(error => {
+        console.error('Fetch Error:', error); // Print any errors
+        alert('Error creating notification');
+    });
+});
+
+
+
+function deleteNotification(id) {
+    if (confirm('Are you sure you want to delete this notification?')) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch(`/notifications-delete/${id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Notification deleted successfully');
+                location.reload();
+            } else {
+                alert(data.message || 'Error deleting notification');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting notification');
+        });
+    }
+    return false; // Prevent default link behavior
+}
+
+function openEditModal(id, title, message, isActive) {
+    // Set values in the edit form
+    document.getElementById('edit_notification_id').value = id;
+    document.getElementById('edit_title').value = title;
+    document.getElementById('edit_message').value = message;
+    document.getElementById('edit_is_active').checked = isActive;
+    
+    // Show the modal
+    const editModal = new bootstrap.Modal(document.getElementById('editNotificationModal'));
+    editModal.show();
+}
+
+// Update the edit form submission handler
+document.getElementById('editNotificationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('edit_notification_id').value;
+    const formData = new FormData(this);
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/notifications-edit/${id}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken,
+        },
+        credentials: 'same-origin',
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Notification updated successfully');
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editNotificationModal'));
+            editModal.hide();
+            location.reload();
+        } else {
+            alert(data.message || 'Error updating notification');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating notification');
+    });
+});
+
+</script>
+{% endblock %}

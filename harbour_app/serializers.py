@@ -88,3 +88,14 @@ class EmailSerializer(serializers.Serializer):
 class ResetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField()
     confirm_password = serializers.CharField()
+    
+    
+    
+
+
+from .models import Notification
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'title', 'message','is_active', 'created_at']
