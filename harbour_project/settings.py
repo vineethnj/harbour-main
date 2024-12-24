@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-!vd-02-fk*4)k2g4lg^awauh$$0viq*mf5mp42j-*r@rtp%e_w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['harbour.onrender.com','192.168.1.39','localhost','127.0.0.1','192.168.203.106','192.168.191.106']
+ALLOWED_HOSTS = ['harbour-main.onrender.com','192.168.1.39','localhost','127.0.0.1','192.168.203.106','192.168.191.106']
 import os
 
 # Application definition
