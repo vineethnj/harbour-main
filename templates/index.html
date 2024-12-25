@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="(time in seconds)">
     <title>Fish Online Selling </title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -208,7 +207,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'pending_orders' %}">
-                                <i class="fas fa-hourglass-half me-2"></i>Pending Orders
+                                <i class="fas fa-hourglass-half me-2"></i>  Pending Orders
                             </a>
                         </li>
                         <li class="nav-item">
@@ -218,7 +217,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'list-notification' %}">
-                                <i class="fas fa-users me-2"></i> Notification
+                                <i class="fas fa-bell fs-5 me-2"></i> Notification
                             </a>
                         </li>
                         
@@ -456,6 +455,15 @@
                 }
             }
         });
+
+
+    // Function to refresh the page
+    function refreshPage() {
+        location.reload();
+    }
+
+    // Set the interval to refresh every second (1000 milliseconds)
+    setInterval(refreshPage, 1000);
         </script>
         </body>
         </html>
