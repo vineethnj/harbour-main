@@ -701,7 +701,7 @@ def process_orders(request):
             order = Order.objects.get(id=order_id)
             order.status = status
             order.save()
-            return redirect('process_orders')
+            return redirect('pending_orders')
 
     return render(request, 'pending_orders.html', {'orders': pending_orders})
 

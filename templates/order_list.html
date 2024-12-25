@@ -6,8 +6,8 @@
 
 <div class="container mt-5">
     <h2 class="mb-4">Order List</h2>
-    <table class="table table-striped table-hover" id="orderTable">
-        <thead class="table-light">
+    <table class="table table-bordered table-hover" id="orderTable">
+        <thead class="table-dark">
             <tr>
                 <th>NO</th>
                 <th>Order ID</th>
@@ -28,7 +28,7 @@
                 <td>{{ order.customer_name }}</td>
                 <td>{{ order.fish.name }}</td>
                 <td>{{ order.quantity }}</td>
-                <td>₹{{ order.total_price }}</td>
+                <td>${{ order.total_price }}</td>
                 <td>
                     <span id="status-{{ order.id }}" class="badge 
                         {% if order.status == 'pending' %}bg-warning{% endif %}
@@ -46,7 +46,12 @@
                             Update Status
                         </button>
                         <ul class="dropdown-menu">
-                            
+                            {% if order.status != 'pending' %}
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'pending')">Pending</a></li>
+                            {% endif %}
+                            {% if order.status != 'processing' %}
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'processing')">Processing</a></li>
+                            {% endif %}
                             {% if order.status != 'delivered' %}
                                 <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'delivered')">Delivered</a></li>
                             {% endif %}
