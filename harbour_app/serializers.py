@@ -5,7 +5,7 @@ from .models import Fish
 class FishSerializer(serializers.ModelSerializer):
     class Meta:
         model = Fish
-        fields = ['id','name', 'price_per_kg', "total_kg",'description', 'image', 'created_at', 'updated_at','delivery_available']
+        fields = ['id','name','malayalam_name', 'price_per_kg', "total_kg",'description', 'image', 'created_at', 'updated_at','delivery_available']
         
         
 from rest_framework import serializers
