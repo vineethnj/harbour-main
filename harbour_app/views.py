@@ -6,20 +6,6 @@ from django.db.models import Sum
 
 
 
-# @login_required
-# def index(request):
-#     order=Order.objects.all().count()
-#     total_kg_sum = Fish.objects.aggregate(total_kg_sum=Sum('total_kg'))['total_kg_sum']
-#     customers=Customer.objects.all().count()
-#     total_sales=Order.objects.filter(status='delivered').aggregate(total_sales=Sum('total_price'))['total_sales']
-#     print(total_sales)
-#     context={
-#         'order':order,
-#         'fish':total_kg_sum,
-#         'customers':customers,
-#         'total_sales':total_sales
-#     }
-#     return render(request,'index.html',context)
 
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncDate
@@ -702,23 +688,21 @@ from django.views.decorators.http import require_POST
 
 @login_required
 def process_orders(request):
+    # Use COALESCE to handle empty labels by defaulting to '0'
     pending_orders = Order.objects.filter(status='pending').extra(
-        select={'label_as_int': 'CAST(label AS INTEGER)'}
+        select={'label_as_int': "COALESCE(NULLIF(label, ''), '0')::integer"}
     ).order_by('label_as_int')
-    
+
     if request.method == 'POST':
         action = request.POST.get('action')
-        
         if action == 'status':
             order_id = request.POST.get('order_id')
             status = request.POST.get('status')
-            
             order = Order.objects.get(id=order_id)
             order.status = status
             order.save()
-            
-        return redirect('process_orders')
-        
+            return redirect('process_orders')
+
     return render(request, 'pending_orders.html', {'orders': pending_orders})
 
 def update_label(request):
